@@ -83,6 +83,46 @@ Chapter letter is extracted from `ICD10CMCode`.
 
 Strict chapter blocking is not exposed in the simplified CLI.
 
+## Template Family Examples and Chapter Relation
+
+This section shows how template families usually align with ICD-10 chapter letters. These are expected tendencies, not hard rules.
+
+### Example 1: Toxic/Poisoning Family
+
+- Example family shape: `toxic_event_x_toxic_agent_x_toxic_intent_x_encounter`
+- Example term: `Poisoning by benzodiazepines, accidental (unintentional), initial encounter`
+- Typical chapter letters: `T` (injury/poisoning), sometimes related external-cause context in `X`/`Y`
+- Why chapter fit is strong: `poisoning` and toxic-intent language are highly concentrated in poisoning/injury coding context.
+
+In `--optionals on`, soft chapter scoring usually boosts this family when the code letter is `T`.
+
+### Example 2: Fracture and Encounter Family
+
+- Example family shape: `injury_x_anatomy_x_fracture_detail_x_encounter`
+- Example term: `Displaced fracture of shaft of left tibia, initial encounter`
+- Typical chapter letters: `S` or `T`
+- Why chapter fit is strong: fracture + encounter episode wording is characteristic of injury chapters.
+
+When reviewing `family_chapter_drift.csv`, these families should usually show high concentration in `S/T`.
+
+### Example 3: Chronic Condition by Organ/System Family
+
+- Example family shape: `condition_high_x_condition_x_anatomy`
+- Example term: `Acute systolic heart failure`
+- Typical chapter letters: often system-specific chapters such as `I` (circulatory), `J` (respiratory), `K` (digestive), depending on anatomy and condition words.
+- Why chapter fit is broader: condition language is medically rich but can span several chapters, so concentration is lower than toxic/injury families.
+
+In `--optionals on`, chapter scoring still helps ranking, but these families are expected to be less chapter-pure.
+
+### Example 4: Screening/History Context Family
+
+- Example family shape: `diagnostic_event_x_diagnostic_context`
+- Example term: `Encounter for screening for malignant neoplasm of colon`
+- Typical chapter letters: often `Z` (factors influencing health status), with some spillover depending on wording.
+- Why chapter fit is informative: context terms like `screening`, `history`, and `encounter for` are strongly associated with status/follow-up coding patterns.
+
+If this family drifts away from `Z` heavily, check whether broad context tokens were learned too aggressively.
+
 ## Worked Example
 
 Example term:
