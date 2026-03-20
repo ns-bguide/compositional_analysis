@@ -16,8 +16,29 @@ The script now exposes a small interface:
 - `--output-dir`
 - `--optionals on|off`
 - `--progress-every`
+- `--family-config`
+- `--validate-family-config`
 
 `--optionals` is a master switch.
+
+## External Family Curation
+
+Family construction is now externalized to:
+- `family_vocabularies.json`
+
+This lets you review and edit:
+- slot vocabularies (`slots`)
+- prefix vocabularies (`slot_prefixes`)
+- template composition (`template_families`)
+
+The pipeline loads this file at runtime. If the file is missing, built-in defaults are used.
+
+Practical editing pattern:
+1. Add or remove tokens in `slots` for a specific concept.
+2. Tighten broad families by changing `template_families` slot sequences.
+3. Run `--validate-family-config` to catch unknown slots or malformed definitions.
+4. Rerun and inspect coverage and drift outputs.
+5. Iterate until families are informative and stable.
 
 ## Two Execution Modes
 

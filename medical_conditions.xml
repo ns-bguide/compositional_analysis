@@ -1,16 +1,3 @@
-<?xml version="1.0" ?>
-<!DOCTYPE grammars SYSTEM "edk.dtd">
-<grammars version="4.0">
-    <include path="../common/ns_blocks-chars.xml" type="private"/>
-
-    <!-- If you don't have a ridiculously strong background in medical terminology, do not add to or
-         otherwise modify any of the anatomical component Entities. You WILL screw things up!
-
-         TODOs:
-            - move all medical root stuff into a common source (reusable for other medical Entities)
-    -->
-
-    <grammar name="industries">
 
         <!-- While most of these are "locational" or "descriptive", there are a number of anatomical
              prefixes that are too ambiguous for use as roots without being overly false positive,
@@ -22,7 +9,6 @@
              inclusion) and it'll start matching words like "cardigan", "colonel", "diameter",
              "neuron", and "pharoah". -->
 
-<!--
         <entity name="healthcare/medical_prefixes" type="private" case="insensitive">
 
             <!~~ Anatomical prefixes ~~>
@@ -126,7 +112,6 @@
             <entry headword="xeno"/>            <!~~ different or foreign ~~>
 
         </entity>
- -->
 
 
 
@@ -12089,8 +12074,7 @@
             <entry headword="thoraco"/>         <!-- chest -->
             <entry headword="vasculo"/>         <!-- blood vessels -->
 
-            <!-- the other -o's -->
-<!--
+
             <entry headword="acantho"/>         <!~~ spine ~~>                  <!~~ "acanth" didn't fare well on its own ~~>
             <entry headword="acephalo"/>        <!~~ head ~~>
             <entry headword="adiposo"/>         <!~~ fatty tissues ~~>
@@ -12206,12 +12190,7 @@
             <entry headword="vulvo"/>           <!~~ vulva ~~>
  -->
 
-<!--
 
-            94 thrombo 37 osteocho 34 cyto 26 chorio 20 cholangio 18 oligo 18 propio 18 reticulo
-            13 strongylo 11 choledocho 11 rhino 11 testo 10 hemangio 10 ileo 9 myxo 7 erythro
-            7 thelio 6 ortho 6 sarco 5 rhabdo 4 pyo 4 sphingo 4 spongio 4 xantho 3 chordo 3 coccidio
-            3 gingivo 3 haemangio 3 lyetho 3 proprio 3 sclerotico 3 trocho
 
 
             <entry headword="fronto-facio"/>    <!~~ forehead ~~>
@@ -12239,7 +12218,7 @@
             <entry headword="rhach"/>           <!~~ spine ~~>
             <entry headword="syndesm"/>         <!~~ ligament ~~>
             <entry headword="thyroid"/>         <!~~ thyroid ~~>
- -->
+
 
         </entity>
 
@@ -12301,7 +12280,6 @@
             <entry headword="ventricular"/>
             <entry headword="vertebral"/>
 
-<!--
             <entry headword="atrial"/>
             <entry headword="aural"/>
             <entry headword="bulbospinal"/>     <!~~ "bulbo" is not a root or prefix above  ~~>
@@ -12331,26 +12309,7 @@
             <entry headword="venous"/>
             <entry headword="vesical"/>
             <entry headword="vesicular"/>
- -->
 
-        </entity>
-
-
-        <entity name="healthcare/anatomical_adjectives_final" type="private" case="insensitive">
-            <pattern score="1.1" case="insensitive">[a-z]*(?A:industries/healthcare/prefixable_anatomical_adjectives)</pattern>
-
-            <!-- I'm torn whether or not these can/should go in "prefixable" -->
-            <entry headword="ocular"/>
-            <entry headword="vulvar"/>
-
-            <!-- These definitely can NOT! -->
-            <entry headword="anal"/>
-            <entry headword="rectal"/>
-            <entry headword="renal"/>
-            <entry headword="spinal"/>
-
-            <!-- I see no value in putting these in "prefixable" -->
-            <entry headword="colorectal"/>
 
         </entity>
 
@@ -12537,50 +12496,6 @@
             <!-- the outlier -->
             <entry headword="albuminism"/>
 
-<!--
-            <pattern case="insensitive">(a(cid|drenal|l(an|bum|euc)|m(in|moni?|yl))|b(ac(ill|teri?)?|il(irub)?|last(ic)?|radykin)|c(a(lc(i(ton)?)?|r([bc](am|on)?|ot))|h(ol(ester)?|loro?)|o(c{1,2}|rtis)|reatin|upr|ys?th?e?)|e(lectrolyt|nzym|pinephr|str(og)?)|f((er|ib)r(inog)?|ruct)|g(a(str|lact)|l(uc(ag)?|y[ck](er(id)?)?|ob(ul)?))|h(epar|ypox)|insul|l(act|e(cith|pt|u(ch?|k))|ipo?(id)?|y(mph|s))|m(agnes|e(l|thion))|n[ai]tr|p(ep[st](inog)?|h(en|osph(at|[eo]r))|las[mt]in(og)?|otass|ro(lin|te))|s(e(pt|rot)|ter|ucr)|t(h(alas{1,2}|romb|yrox)|ox))([aeio]([cdhlns]|th?))?((a(em|s)|em|ur|open)i(ac?|c)s?|[oy]sis(es)?|ism(u?s)?)</pattern>
- -->
-        </entity>
-
-
-        <!-- Suffixes that strongly indicate a medical condition in almost every circustance.
-             However, unlike prefixable_ailments below, entries in this component Entity cannot
-             stand alone and must require the presence of even just a few statistically random
-             letters to match, typically due to the standalone form used as part of the scientific
-             name of things like bugs, plants, and bacteria. For example, "dactylia" (an alternate
-             form of "dactyly") is a genus of demosponges, however "adactylia" is the congenital
-             lack of fingers or toes. -->
-
-        <entity name="healthcare/requires_prefix_ailments" type="private" case="insensitive">
-
-            <!-- Includes the British-English spelling of "-aemias", which differentiates blood
-                 disorders from other normal English words such as "academia", "Bohemia", and
-                 "epidemic", thus the need for the "the_emias" to handle US spelling, even though
-                 there is overlap. -->
-            <pattern case="insensitive">(aem|dips|ph(il|ren))i(ac?|c)s?</pattern> <!-- ia/iac/iacs/ic/ics -->
-
-            <pattern case="insensitive">rrh(ag(e|i([ac]|ng))|e(a|xic?)|oea)s?</pattern> <!-- rrh* -->
-            <pattern case="insensitive">p(epsia|h(a[gs]ia|ob(e|i[ac]))|l(asia|egi[ac]))s?</pattern> <!-- the p's -->
-            <pattern case="insensitive">(cephal|oplex)(i(a|cs?|es)|y)</pattern> <!-- ia/ic/ics/ies/y -->
-
-            <entry headword="ectasia"/>
-            <entry headword="ectasias"/>
-            <entry headword="ectasis"/>
-            <entry headword="inuria"/>
-            <entry headword="megaly"/>
-            <entry headword="odynia"/>
-            <entry headword="odynias"/>
-            <entry headword="oiditis"/>
-            <entry headword="optoses"/>
-            <entry headword="poiesis"/>
-
-<!--
-            <pattern case="insensitive">[a-z]{2,}(hidrosi|s(padia|talsi)|tosi)s</pattern> <!~~ possible FP: mitosis ~~>
-            <entry headword="dactylia"/>
-            <entry headword="ptosis"/>
- -->
-
-        </entity>
 
 
         <!-- All the rollups make distinct and sensical component names very difficult! If there's
@@ -12674,9 +12589,7 @@
             <entry headword="stenoses"/>
             <entry headword="stenosis"/>
 
-<!--
-            <pattern case="insensitive">(?A:industries/healthcare/conditions/the_emias)</pattern>
- -->
+
 
         </entity>
 
@@ -12689,20 +12602,6 @@
              acceptable standalone without a prefix of any kind. -->
 
         <entity name="healthcare/conditions_high" type="private" case="insensitive">
-
-            <!-- Handle the prefixable words/phrases -->
-            <pattern score="1.5" case="insensitive">[a-z]*(?A:industries/healthcare/conditions/the_omas)(s|ta)?</pattern>
-            <pattern score="1.3" case="insensitive">[a-z]*(?A:industries/healthcare/conditions/the_emias)</pattern>
-            <pattern score="1.2" case="insensitive">[a-z]*(?A:industries/healthcare/prefixable_ailments)</pattern>
-            <pattern case="insensitive">[a-z]{2,}(?A:industries/healthcare/requires_prefix_ailments)</pattern>
-
-            <!-- Pair anatomical roots with conditional suffixes -->
-<!--
-            <pattern case="insensitive">[a-z]*(?A:industries/healthcare/anatomy_roots_final)[a-z]*(\-[a-z]{4,})?(?A:industries/healthcare/suffixes_indicating_conditions)</pattern>
- -->
-
-
-            <pattern case="insensitive">(((ach|burn|cramp|prickl|radiat|s(hoot|t(abb|ing))|t(hrobb|ingl))ing|dull|sharp)\ )?pains?</pattern>
 
             <entry headword="bleeding"/>
 
@@ -12992,146 +12891,4 @@
             <entry headword="virulent"/>
             <entry headword="visible"/>
         </entity>
-
-
-        <entity name="healthcare/anatomy_locations" type="private" case="insensitive">
-
-            <!-- This builds most Latin types (e.g. "proximal", "subsagittal", "transaxial") -->
-            <pattern score="1.1" case="insensitive">(antero|bi|dors[io]|centro|fronto|in(f(ero|ra)|ter(medio|o)?)|latero|m(edio|id)|p(ost(ero)?|re)|su(b|p(ero?|ra))|trans|ventro)?(axial|(inf|(sup|([ai]n|pos)t))erior|(dors|(ex|in)tern|front|l(ater|oc)|medi|proxim|radi|sagitt|[cv]entr)al)</pattern>
-
-            <entry headword="contralateral"/>       <!-- not adding "contra" to Latin yet -->
-            <entry headword="distal"/>              <!-- I don't think this needs the full Latin treatment -->
-            <entry headword="ipsilateral"/>         <!-- not adding "ipsi" to Latin pattern yet -->
-            <entry headword="peripheral"/>          <!-- I don't think this needs the full Latin treatment -->
-
-            <pattern case="insensitive">(left|right)([\ \-](lower|sided?|upper))?</pattern>
-            <pattern case="insensitive">(lower|upper)([\ \-](left|right))?</pattern>
-
-            <entry headword="back to front"/>
-            <entry headword="front and back"/>
-            <entry headword="front to back"/>
-            <entry headword="left and right"/>
-            <entry headword="left to right"/>
-            <entry headword="low"/>
-            <entry headword="lower and upper"/>
-            <entry headword="middle"/>
-            <entry headword="right and left"/>
-            <entry headword="right to left"/>
-            <entry headword="upper and lower"/>
-
-            <!-- Still kinda questioning these -->
-            <entry headword="deep"/>                <!-- TODO: research alternative "profound" -->
-            <entry headword="superficial"/>         <!-- literally, near the surface -->
-            <entry headword="unspecified"/>
-
-        </entity>
-
-
-        <!-- Including -scopies, even though they're not always surgeries -->
-        <entity name="healthcare/surgeries" type="private" case="insensitive">
-            <pattern case="insensitive">[a-z]+(ectom|o(s(cop|tom)|t(om|rips))|[aio]p(ex|last))(ies|y)</pattern>
-        </entity>
-
-        <!-- Chromosomes -->
-        <entity name="hc_sym/chromosomes" type="private" case="insensitive">
-            <pattern case="insensitive">(\(((?A:chars/hyphens)|[\x{2192}\x{2212}\+])\)|((?A:chars/hyphens)|[\x{2192}\x{2212}])(\+\>?)?|\+)</pattern>
-        </entity>
-
-        <entity name="healthcare/chromosomes" type="private" case="insensitive">
-            <pattern case="insensitive">([0-9]{1,2}[pq]([0-9]{2}(\.[0-9]{1,2})?|ter)?(?A:industries/hc_sym/chromosomes)?([pq]?([0-9]{2}(\.[0-9]{1,2})?|ter)?(?A:industries/hc_sym/chromosomes)?)?)</pattern>
-        </entity>
-
-        <!-- Nth-degree (used for burns) -->
-        <entity name="healthcare/conditions/nth_degree" type="private" case="insensitive">
-            <pattern case="insensitive">(1(st)?|2(nd)?|3(rd)?|[4-6](th)?|first|sec(ond)?|thi?rd|f(our|if)th|sixth|(an\ )?unsp(ec(ified)?)?)[\ \-\x{2010}-\x{2013}]d(eg(r(ee)?)?|gr)</pattern>
-        </entity>
-
-        <!-- Common physical activities, often related to complaints, e.g. "difficulty breathing" -->
-        <entity name="healthcare/activities" type="private" case="insensitive">
-            <pattern case="insensitive">(breath|p(ee|oop)|s(itt|tand)|[tw]alk|urinat)ing</pattern> <!-- Left out senses for now -->
-        </entity>
-
-
-        <!-- Curated prepositions combined with optional possessive determiners (or the definite
-             article "the"), generally forming deterministic phrasal components that are used to
-             stitch together other components to create an overlying medical condition, mostly in
-             the form of "[condition] [determiner] [anatomy]", e.g. "cancer of the endometrium",
-             "bleeding inside her mouth", or "infection in my middle ear". Only for use with
-             compound Entities. -->
-
-        <entity name="healthcare/determiners" type="private" case="insensitive">
-            <pattern case="insensitive">(a(bo(ut|ve)|cross|round|t)|be(fore|hind|low|neath|tween)|o([fn]|utside|ver)|in(side|to)?|ne(ar|xt\ to)|t(hrough(out)?|o)|u(nder(neath)?|pon)|within)(\ (a|h(er|is)|my|the|your))?</pattern>
-        </entity>
-
-
-        <!-- ################################################################################### -->
-
-
-
-        <!-- r101   (test_medical: 1.9s, 88525q/36409u; test_profanity.txt: 17.2s, 17471q/1463u) (2.2MB) -->
-        <!-- r105   (test_medical: 7.9s, 73703q/26511u; test_profanity.txt: 121.9s, 8724q/836u) (compile: 11.7s, 2.8MB) -->
-        <!-- r106.1 (test_medical: 7.4s, 73210q/26509u; test_profanity.txt: 118.0s, 8802q/848u) (compile: 9.5s, 1.9MB) -->
-        <!-- r106.2 (test_medical: 3.1s, 58625q/22345u; test_profanity.txt: 46.6s, 8531q/775u) (compile: Ns, 1.6MB) -->
-
-        <entity name="healthcare/medical_conditions/eng" type="public" case="insensitive">
-
-            <!-- Start with "the_big_list". Comment this out for internal testing. (compile: 4.7s, 929KB) (test_medical: 1.18s, 18554q/7051u) -->
-            <pattern case="insensitive">(?A:industries/healthcare/conditions/the_big_list)</pattern>
-
-            <!-- Reject regular words or common false positives -->
-            <pattern score="0" case="insensitive">(br(eak|oke)|crush|shatter)[a-z]{0,4}(\ [a-z]{1,4})?\ hearts?</pattern>
-            <pattern score="0" case="insensitive">hearts?\ [a-z]+\ (broken|crushed|shattered)</pattern>
-            <pattern score="0" case="insensitive">pain in the neck</pattern>
-
-            <!-- NON-ANATOMICALS -->
-
-                <!-- Burns (compile: 2.4s, 13K) (test_medical: 1.0s, 7q/7u) -->
-                <pattern case="insensitive">(?A:industries/healthcare/conditions/nth_degree)\ ((c(austic|hem(ical)?|orr(osive)?)|sun|thermal)\ ?)?burns?</pattern>
-                <pattern case="insensitive">((sun\ ?)?burns?|corr(osion)?)?,?\ (of\ (the\ )?)?(?A:industries/healthcare/conditions/nth_degree)</pattern>
-                <pattern case="insensitive">burns?\ (involving|over)\ ([1-9][0-9]?)(%|\ p(ct|ercent))\ (of\ (the\ )?)?(t?bsa|(total\ )?b(ody\ surface\ area|sa))</pattern>
-
-                <!-- Post-surgical conditions (compile: 2.3s, 21K) (test_medical: 1.1s, 19q/19u) -->
-                <pattern case="insensitive">(?A:industries/healthcare/surgeries)\ (complication|infection|malfunction|syndrome)s?</pattern>
-                <pattern case="insensitive">(complication|infection)s?\ (a(fter|ssociated\ with)|due\ to|f(ollowing|rom)|of|post)\ (?A:industries/healthcare/surgeries)</pattern> <!-- debating adding "across" and "throughout" -->
-
-                <!-- Professions and hobbies (in addition to the static ones in tbl) (compile: 2.4s, 10K) (test_medical: 1.3s, 29q/26u) -->
-                <pattern case="insensitive">(c(heese|o(al|ffee))|fishmeal|granite|iron|malt|stone)[\ \-\x{2010}-\x{2013}]?worker(s['\x{2019}]?|['\x{2019}]s)?\ lungs?</pattern>
-                <pattern case="insensitive">(co(al|balt|pper)|iron|lead|nickel|tin|uranium|zinc)?[\ \-\x{2010}-\x{2013}]?miner(s['\x{2019}]?|['\x{2019}]s)?\ lungs?</pattern>
-                <pattern case="insensitive">(cheese[\ \-]?washer|f(armer|urrier)|grinder|ha(rvester|y[\ \-\x{2010}-\x{2013}]?maker)|ma(ple[\ \-]?bark[\ \-]?stripper|son)|s(late[\ \-]?dress|tone[\ \-]?cutt)er|thresher)(s['\x{2019}]?|['\x{2019}]s)?\ lungs?</pattern>
-
-                <!-- Named or eponymous diseases (compile: 2.5s, 68K) (test_medical: 1.2s, 3534q/2467u) -->
-                <pattern case="insensitive">[a-z][a-z\xC0-\xFF]+([\-\x{2010}-\x{2013}][a-z\xC0-\xFF]+)+(['\x{2019}]s?)?\ ([a-z]+\ ){0,2}(dis(ease|order)|syndrome)s?</pattern>
-<!--
-                <pattern case="insensitive">(d(el?|i)|v[ao]n(\ de[nr])?)\ [a-z\xC0-\xFF]+(['\x{2019}]s?)?\ ([a-z]{2,}\ ){0,2}(dis(ease|order)|syndrome)s?</pattern>
- -->
-
-                <!-- Autosomnal disorders -->
-                <pattern case="insensitive">(([0-9]{1,2}|t?\([0-9]{1,2}(;[0-9]{1,2})?\)\ ?\()\ ?[pq](ter|\.)?\ ?([0-9]{2}(\.[0-9]{1,2})?)(?A:industries/hc_sym/chromosomes)?);?([pq]?([0-9]{2}(\.[0-9]{1,2})?)[\-\x{2010}\x{2212}]?)?\ ?(m?d(el(etion)?|s)|[pq]ter)</pattern>
-                <pattern case="insensitive">(chromosome\ ?)?(?A:industries/healthcare/chromosomes)([\ \/](distal|in(terstitial|verted)|minus|partial|recurrent|subtelomere|terminal|uniparental))?(\ (d((ele|uplica)tion|iso(my|rder))s?|m(icrod(ele|uplica)tions?|onosomy)|pentasomy|syndromes?|t(etra|ri)somy)){1,2}</pattern>
-                <pattern case="insensitive">((complete|distal|in(terstitial|verted)|minus|partial|recurrent|subtelomere|te(lomeric|rminal)|uniparental)[\ \/])?((d((ele|uplica)tions?|isomy)|m(icrod(ele|uplica)tions?|onosomy)|pentasomy|t(etra|ri)somy)\ )((f(or|rom)|of(\ the)?)\ )?(?A:industries/healthcare/chromosomes)(\ (disorder|syndrome)s?)?</pattern>
-
-                <!-- Others -->
-                <pattern case="insensitive">([a-z0-9\-]+(a[st]e|r(ine?|ol)|\ acid)|vitamin(\ ([ac-ek]|b(12?|[235679])?))?|b(12?|[235679]))\ (immuno)?deficiency</pattern>
-                <pattern case="insensitive">[a-z]+\ (hyper|in)?sensitivity syndrome</pattern> <!-- While tempting to add hyphens here, those are covered by eponymous diseases -->
-                <pattern case="insensitive">(difficult(ies|y)|issues?|problems?|troubles?)\ ((in|with)\ )?(?A:industries/healthcare/activities)</pattern>
-                <pattern case="insensitive">(?A:industries/healthcare/activities)\ (difficult(ies|y)|issues?|problems?|troubles?)</pattern>
-
-            <!-- ANATOMICALS -->
-
-                <!-- Phrase pattern: ["acute"] ("blastoma" or "defect") "of the" ["any_word"] "cervix" (compile: 3.12s, 168K) (test_medical: 2.81s, 3281q/1753u) -->
-                <pattern score="1.5" case="insensitive">((?A:industries/healthcare/condition_adjectives),?\ )*((?A:industries/healthcare/conditions_low)|(?A:industries/healthcare/conditions_high))\ (?A:industries/healthcare/determiners)\ ([a-z]{4,}\ ){0,3}((?A:industries/healthcare/anatomy_singular)|(?A:industries/healthcare/anatomy_plural))</pattern>
-
-                <pattern score="1.2" case="insensitive">((?A:industries/healthcare/condition_adjectives)\ )?(((?A:industries/healthcare/anatomical_adjectives_final)|(?A:industries/healthcare/anatomy_singular))\ )*(?A:industries/healthcare/conditions_high)</pattern>
-                <pattern score="1.2" case="insensitive">((?A:industries/healthcare/condition_adjectives)\ )?(((?A:industries/healthcare/anatomical_adjectives_final)|(?A:industries/healthcare/anatomy_singular))\ )+(?A:industries/healthcare/conditions_low)</pattern>
-
-                <pattern case="insensitive">(?A:industries/healthcare/adjectival_conditions)\ ((?A:industries/healthcare/anatomy_locations)\ )?([a-z]+\ )?((?A:industries/healthcare/anatomy_singular)|(?A:industries/healthcare/anatomy_plural))</pattern>
-                <pattern case="insensitive">((?A:industries/healthcare/anatomy_singular)|(?A:industries/healthcare/anatomy_plural))\ ([a-z]+\ )?(?A:industries/healthcare/adjectival_conditions)</pattern>
-                <pattern case="insensitive">((?A:industries/healthcare/condition_adjectives)([\ \-])(?A:industries/healthcare/anatomical_adjectives_final))+\ [a-z]{5,}</pattern>
-
-        </entity>
-
-    </grammar>
-
-</grammars>
-
 

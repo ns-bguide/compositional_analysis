@@ -1,5 +1,6 @@
 import argparse
 import csv
+import json
 import math
 import os
 import re
@@ -16,6 +17,7 @@ except ImportError:
 
 TOKEN_PATTERN = re.compile(r"[a-z0-9]+")
 ICD_CODE_LETTER_PATTERN = re.compile(r"^\s*([A-Za-z])")
+DEFAULT_FAMILY_CONFIG_PATH = "family_vocabularies.json"
 
 ICD_CHAPTER_BY_LETTER = {
     "A": "infectious_parasitic",
@@ -70,10 +72,161 @@ STOPWORDS = {
     "caused",
     "cause",
     "causing",
+    "classified",
+    "elsewhere",
+    "specified",
+    "susceptible",
+    "resistant",
+    "status",
+    "post",
+    "during",
+    "system",
+    "organ",
+    "part",
+    "site",
+    "wheel",
     "other",
     "its",
     "not",
     "no",
+}
+
+ABBREVIATION_PHRASE_REPLACEMENTS = [
+    (re.compile(r"\bw/o\b", flags=re.IGNORECASE), "without"),
+    (re.compile(r"\bw/\b", flags=re.IGNORECASE), "with"),
+    (re.compile(r"\bd/t\b", flags=re.IGNORECASE), "due to"),
+    (re.compile(r"\bs/p\b", flags=re.IGNORECASE), "status post"),
+]
+
+ABBREVIATION_TOKEN_MAP = {
+    "fx": ["fracture"],
+    "encntr": ["encounter"],
+    "init": ["initial"],
+    "subs": ["subsequent"],
+    "sqla": ["sequela"],
+    "dx": ["diagnosis"],
+    "hx": ["history"],
+    "tx": ["treatment"],
+    "acc": ["accidental"],
+    "dur": ["during"],
+    "sys": ["system"],
+    "org": ["organ"],
+    "proc": ["procedure"],
+    "lac": ["laceration"],
+    "bi": ["bilateral"],
+    "lt": ["left"],
+    "rt": ["right"],
+    "l": ["left"],
+    "r": ["right"],
+    "w": ["with"],
+    "bilat": ["bilateral"],
+    "assoc": ["associated"],
+    "unspc": ["unspecified"],
+    "spcf": ["specified"],
+    "classd": ["classified"],
+    "elswhr": ["elsewhere"],
+    "dissem": ["disseminated"],
+    "suscep": ["susceptible"],
+    "resis": ["resistant"],
+    "infct": ["infection"],
+    "infxn": ["infection"],
+    "inj": ["injury"],
+    "injured": ["injury"],
+    "displ": ["displaced"],
+    "disp": ["displaced"],
+    "opn": ["open"],
+    "clos": ["closed"],
+    "clsn": ["collision"],
+    "ovrlp": ["overlapping"],
+    "gu": ["genitourinary"],
+    "periureth": ["periurethral"],
+    "glnd": ["gland"],
+    "abcs": ["abscess"],
+    "malig": ["malignant"],
+    "femr": ["femur"],
+    "rad": ["radius"],
+    "fngr": ["finger"],
+    "hnd": ["hand"],
+    "ft": ["foot"],
+    "wrs": ["wrist"],
+    "humer": ["humerus"],
+    "ank": ["ankle"],
+    "pnctr": ["puncture"],
+    "lacerat": ["laceration"],
+    "traum": ["trauma"],
+    "commnt": ["comminuted"],
+    "delay": ["delayed"],
+    "routn": ["routine"],
+    "up": ["upper"],
+    "low": ["lower"],
+    "pk": ["pickup"],
+    "hv": ["heavy"],
+    "mc": ["motorcycle"],
+    "trn": ["train"],
+    "pedl": ["pedal"],
+    "whl": ["wheel"],
+    "physl": ["physeal"],
+    "epiphy": ["epiphysis"],
+    "musc": ["muscle"],
+    "tend": ["tendon"],
+    "fasc": ["fascia"],
+    "fb": ["foreign", "body"],
+    "lv": ["level"],
+    "lev": ["level"],
+    "deg": ["degree"],
+    "loc": ["location"],
+    "forarm": ["forearm"],
+    "abd": ["abdomen"],
+    "corros": ["corrosion"],
+    "vert": ["vertebra"],
+    "thor": ["thoracic"],
+    "diab": ["diabetes"],
+    "msl": ["muscle"],
+    "cervcal": ["cervical"],
+    "lum": ["lumbar"],
+    "metacarpal": ["metacarpal"],
+    "metatarsal": ["metatarsal"],
+    "nondisp": ["nondisplaced"],
+    "nonthermal": ["nonthermal"],
+    "nonvenomous": ["nonvenomous"],
+    "oth": ["other"],
+    "periocular": ["periocular"],
+    "phalanx": ["phalanx"],
+    "thm": ["thumb"],
+    "unilat": ["unilateral"],
+    "unsp": ["unspecified"],
+    "poisn": ["poisoning"],
+    "prosth": ["prosthetic"],
+    "fol": ["following"],
+    "milt": ["multiple"],
+    "tri": ["trimester"],
+    "occup": ["occupant"],
+    "athscl": ["atherosclerosis"],
+    "pro": ["proximal"],
+    "sltr": ["salter"],
+    "haris": ["harris"],
+    "sltrharis": ["salter", "harris"],
+    "nontraf": ["nontraffic"],
+    "traf": ["traffic"],
+    "veh": ["vehicle"],
+    "mv": ["motor", "vehicle"],
+    "ped": ["pedestrian"],
+    "pasngr": ["passenger"],
+    "driver": ["driver"],
+    "van": ["van"],
+    "truck": ["truck"],
+    "cyc": ["cycle"],
+    "rail": ["rail"],
+    "pkup": ["pickup"],
+    "prsn": ["person"],
+    "shldr": ["shoulder"],
+    "nk": ["neck"],
+    "upr": ["upper"],
+    "prox": ["proximal"],
+    "dist": ["distal"],
+    "med": ["medial"],
+    "extn": ["extension"],
+    "dmac": ["mycobacterium", "avium", "intracellulare", "complex"],
 }
 
 ANATOMY_TOKENS = {
@@ -93,6 +246,29 @@ ANATOMY_TOKENS = {
     "ankle",
     "foot",
     "toe",
+    "extremity",
+    "fascia",
+    "nail",
+    "wall",
+    "hip",
+    "thorax",
+    "artery",
+    "patella",
+    "calcaneus",
+    "limb",
+    "vertebra",
+    "thoracic",
+    "cervical",
+    "peritoneal",
+    "finger",
+    "thumb",
+    "radius",
+    "ulna",
+    "tibia",
+    "fibula",
+    "humerus",
+    "phalanx",
+    "condyle",
     "shoulder",
     "wrist",
     "eye",
@@ -110,6 +286,26 @@ ANATOMY_TOKENS = {
     "nerve",
     "muscle",
     "tendon",
+    "carpal",
+    "clavicle",
+    "coccyx",
+    "epicondyle",
+    "eyelid",
+    "malleolus",
+    "metacarpal",
+    "metatarsal",
+    "olecranon",
+    "periocular",
+    "process",
+    "rib",
+    "sacrum",
+    "scalp",
+    "scapula",
+    "sternum",
+    "styloid",
+    "tarsal",
+    "trochanter",
+    "tuberosity",
 }
 
 INJURY_TOKENS = {
@@ -281,6 +477,16 @@ DIAGNOSTIC_CLASSIFIER_TOKENS = {
     "secondary",
     "age",
     "agerelated",
+    "level",
+    "degree",
+    "trimester",
+    "multiple",
+    "complete",
+    "first",
+    "second",
+    "third",
+    "lesser",
+    "great",
 }
 
 DIAGNOSTIC_CONTEXT_TOKENS = set()
@@ -300,12 +506,36 @@ CONDITION_TOKENS = {
     "complication",
     "failure",
     "occlusion",
+    "diabetes",
+    "atherosclerosis",
+    "subluxation",
+    "drowning",
 }
 
 MECHANISM_TOKENS = {
     "collision",
     "traffic",
+    "nontraffic",
     "transport",
+    "vehicle",
+    "motor",
+    "pedestrian",
+    "driver",
+    "passenger",
+    "person",
+    "occupant",
+    "pickup",
+    "van",
+    "truck",
+    "cycle",
+    "rail",
+    "motorcycle",
+    "pedal",
+    "car",
+    "bus",
+    "bike",
+    "train",
+    "drowning",
     "fall",
     "bite",
     "sting",
@@ -346,6 +576,7 @@ LOCATION_TOKENS = {
     "outer",
     "central",
     "peripheral",
+    "middle",
 }
 
 PROCEDURE_TOKENS = {
@@ -522,6 +753,28 @@ TEMPLATE_FAMILY_SPECS = {
     "anatomy_x_injury_x_encounter": [("anatomy", ANATOMY_TOKENS), ("injury", INJURY_TOKENS), ("encounter", ENCOUNTER_TOKENS)],
     "etiology_x_condition": [("etiology", ETIOLOGY_TOKENS), ("condition", CONDITION_TOKENS)],
     "injury_x_encounter": [("injury", INJURY_TOKENS), ("encounter", ENCOUNTER_TOKENS)],
+    "mechanism_x_injury_x_encounter": [
+        ("mechanism", MECHANISM_TOKENS),
+        ("injury", INJURY_TOKENS),
+        ("encounter", ENCOUNTER_TOKENS),
+    ],
+    "mechanism_x_anatomy_x_injury": [
+        ("mechanism", MECHANISM_TOKENS),
+        ("anatomy", ANATOMY_TOKENS),
+        ("injury", INJURY_TOKENS),
+    ],
+    "diagnostic_classifier_x_anatomy_x_injury_x_encounter": [
+        ("diagnostic_classifier", DIAGNOSTIC_CLASSIFIER_TOKENS),
+        ("anatomy", ANATOMY_TOKENS),
+        ("injury", INJURY_TOKENS),
+        ("encounter", ENCOUNTER_TOKENS),
+    ],
+    "mechanism_x_anatomy_x_injury_x_encounter": [
+        ("mechanism", MECHANISM_TOKENS),
+        ("anatomy", ANATOMY_TOKENS),
+        ("injury", INJURY_TOKENS),
+        ("encounter", ENCOUNTER_TOKENS),
+    ],
     "anatomy_x_condition": [("anatomy", ANATOMY_TOKENS), ("condition", CONDITION_TOKENS)],
     "procedure_x_complication": [("procedure", PROCEDURE_TOKENS), ("complication", COMPLICATION_TOKENS)],
     "mechanism_x_injury": [("mechanism", MECHANISM_TOKENS), ("injury", INJURY_TOKENS)],
@@ -566,6 +819,135 @@ SLOT_PREFIX_TAXONOMY = {
 }
 
 SINGLE_SLOT_FAMILY_SPECS = {f"single_slot_{slot}": [(slot, vocab)] for slot, vocab in SLOT_TAXONOMY.items()}
+
+
+def _normalize_config_tokens(values: list[str]) -> set[str]:
+    tokens = set()
+    for value in values:
+        if not isinstance(value, str):
+            continue
+        tokens.update(tokenize(value))
+    return tokens
+
+
+def _build_template_specs_from_slot_names(template_families: dict[str, list[str]]) -> dict[str, list[tuple[str, set[str]]]]:
+    specs = {}
+    for family_name, slot_names in template_families.items():
+        if not isinstance(slot_names, list) or not slot_names:
+            continue
+        prepared = []
+        valid = True
+        for slot_name in slot_names:
+            if slot_name not in SLOT_TAXONOMY:
+                valid = False
+                break
+            prepared.append((slot_name, SLOT_TAXONOMY[slot_name]))
+        if valid:
+            specs[family_name] = prepared
+    return specs
+
+
+def _load_family_config_data(config_path: str) -> dict | None:
+    if not config_path or not os.path.exists(config_path):
+        return None
+    with open(config_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def validate_family_config(config_path: str) -> tuple[bool, list[str], list[str]]:
+    errors = []
+    warnings = []
+
+    if not config_path:
+        warnings.append("No family config path provided; defaults will be used.")
+        return True, errors, warnings
+    if not os.path.exists(config_path):
+        warnings.append(f"Family config '{config_path}' not found; defaults will be used.")
+        return True, errors, warnings
+
+    try:
+        data = _load_family_config_data(config_path)
+    except Exception as exc:
+        return False, [f"Failed to parse JSON '{config_path}': {exc}"], warnings
+
+    if not isinstance(data, dict):
+        return False, ["Family config root must be a JSON object."], warnings
+
+    slots = data.get("slots", {})
+    if slots is not None and not isinstance(slots, dict):
+        errors.append("'slots' must be an object mapping slot name -> token list.")
+    elif isinstance(slots, dict):
+        for slot_name, values in slots.items():
+            if slot_name not in SLOT_TAXONOMY:
+                errors.append(f"Unknown slot in 'slots': {slot_name}")
+                continue
+            if not isinstance(values, list):
+                errors.append(f"Slot '{slot_name}' must map to a list of strings.")
+                continue
+            if any(not isinstance(v, str) for v in values):
+                errors.append(f"Slot '{slot_name}' contains non-string values.")
+            if len(values) == 0:
+                warnings.append(f"Slot '{slot_name}' has an empty token list.")
+
+    slot_prefixes = data.get("slot_prefixes", {})
+    if slot_prefixes is not None and not isinstance(slot_prefixes, dict):
+        errors.append("'slot_prefixes' must be an object mapping slot name -> prefix list.")
+    elif isinstance(slot_prefixes, dict):
+        for slot_name, values in slot_prefixes.items():
+            if slot_name not in SLOT_PREFIX_TAXONOMY:
+                errors.append(f"Unknown slot in 'slot_prefixes': {slot_name}")
+                continue
+            if not isinstance(values, list):
+                errors.append(f"Prefix slot '{slot_name}' must map to a list of strings.")
+                continue
+            if any(not isinstance(v, str) for v in values):
+                errors.append(f"Prefix slot '{slot_name}' contains non-string values.")
+
+    template_families = data.get("template_families", {})
+    if template_families is not None and not isinstance(template_families, dict):
+        errors.append("'template_families' must be an object mapping family name -> ordered slot list.")
+    elif isinstance(template_families, dict):
+        for family_name, slot_names in template_families.items():
+            if not isinstance(slot_names, list) or not slot_names:
+                errors.append(f"Family '{family_name}' must map to a non-empty list of slot names.")
+                continue
+            unknown_slots = [slot for slot in slot_names if slot not in SLOT_TAXONOMY]
+            if unknown_slots:
+                errors.append(f"Family '{family_name}' references unknown slots: {', '.join(unknown_slots)}")
+
+    return len(errors) == 0, errors, warnings
+
+
+def apply_family_config(config_path: str) -> bool:
+    global TEMPLATE_FAMILY_SPECS
+    if not config_path or not os.path.exists(config_path):
+        return False
+
+    data = _load_family_config_data(config_path)
+
+    slot_updates = data.get("slots", {})
+    if isinstance(slot_updates, dict):
+        for slot_name, values in slot_updates.items():
+            if slot_name not in SLOT_TAXONOMY or not isinstance(values, list):
+                continue
+            SLOT_TAXONOMY[slot_name].clear()
+            SLOT_TAXONOMY[slot_name].update(_normalize_config_tokens(values))
+
+    prefix_updates = data.get("slot_prefixes", {})
+    if isinstance(prefix_updates, dict):
+        for slot_name, values in prefix_updates.items():
+            if slot_name not in SLOT_PREFIX_TAXONOMY or not isinstance(values, list):
+                continue
+            SLOT_PREFIX_TAXONOMY[slot_name].clear()
+            SLOT_PREFIX_TAXONOMY[slot_name].update(_normalize_config_tokens(values))
+
+    template_updates = data.get("template_families", {})
+    if isinstance(template_updates, dict) and template_updates:
+        configured_specs = _build_template_specs_from_slot_names(template_updates)
+        if configured_specs:
+            TEMPLATE_FAMILY_SPECS = configured_specs
+
+    return True
 
 XML_ENTITY_SLOT_RULES = {
     "healthcare/anatomy_singular": [("anatomy", "token")],
@@ -709,6 +1091,24 @@ FAMILY_CHAPTER_POLICY: dict[str, dict[str, object]] = {
         "weight": 1.1,
         "source": "explicit",
     },
+    "mechanism_x_injury_x_encounter": {
+        "allow": INJURY_CHAPTER_LETTERS | EXTERNAL_CAUSE_CHAPTER_LETTERS,
+        "block": set(),
+        "weight": 1.12,
+        "source": "explicit",
+    },
+    "mechanism_x_anatomy_x_injury": {
+        "allow": INJURY_CHAPTER_LETTERS | EXTERNAL_CAUSE_CHAPTER_LETTERS,
+        "block": set(),
+        "weight": 1.12,
+        "source": "explicit",
+    },
+    "mechanism_x_anatomy_x_injury_x_encounter": {
+        "allow": INJURY_CHAPTER_LETTERS | EXTERNAL_CAUSE_CHAPTER_LETTERS,
+        "block": set(),
+        "weight": 1.14,
+        "source": "explicit",
+    },
     "condition_adjective_x_condition_high": {
         "allow": ALL_KNOWN_CHAPTER_LETTERS - EXTERNAL_CAUSE_CHAPTER_LETTERS,
         "block": set(),
@@ -767,7 +1167,19 @@ CHAPTER_POLICY_STRICT_EXCEPTIONS = {
 
 
 def tokenize(text: str) -> list[str]:
-    return TOKEN_PATTERN.findall((text or "").lower())
+    normalized = (text or "").lower()
+    for pattern, replacement in ABBREVIATION_PHRASE_REPLACEMENTS:
+        normalized = pattern.sub(replacement, normalized)
+
+    tokens = TOKEN_PATTERN.findall(normalized)
+    expanded_tokens = []
+    for token in tokens:
+        mapped = ABBREVIATION_TOKEN_MAP.get(token)
+        if mapped:
+            expanded_tokens.extend(mapped)
+        else:
+            expanded_tokens.append(token)
+    return expanded_tokens
 
 
 def _normalize_chapter_policy(policy: dict[str, object] | None, source: str) -> dict[str, object]:
@@ -1015,9 +1427,14 @@ def detect_slot_fillers(tokens: list[str], slot_specs: list[tuple[str, set[str],
     return fillers, used_fuzzy, ambiguous
 
 
+def has_cross_slot_duplicate_fillers(fillers: dict[str, str]) -> bool:
+    values = [value for value in fillers.values() if value]
+    return len(values) != len(set(values))
+
+
 def term_fits_family_whole(tokens: list[str], slot_specs: list[tuple[str, set[str], dict[str, set[str]]]], match_mode: str) -> bool:
     for token in tokens:
-        if token in STOPWORDS:
+        if token in STOPWORDS or is_code_like_token(token) or len(token) == 1:
             continue
         covered = False
         for slot_name, vocab, stem_index in slot_specs:
@@ -1211,7 +1628,7 @@ def extract_template_family_stats(
     if extra_family_specs:
         family_specs.update(extra_family_specs)
     if include_single_slot_families:
-        family_specs.update(SINGLE_SLOT_FAMILY_SPECS)
+        family_specs.update({f"single_slot_{slot}": [(slot, vocab)] for slot, vocab in SLOT_TAXONOMY.items()})
 
     matchers = build_slot_matchers(family_specs)
     family_policy_cache = {
@@ -1255,6 +1672,9 @@ def extract_template_family_stats(
 
                 fillers, used_fuzzy, ambiguous = detect_slot_fillers(tokens, slot_specs, match_mode)
                 if fillers is None:
+                    continue
+                # Avoid vague auto-family matches where one token fills multiple slots.
+                if family_name.startswith("auto_") and has_cross_slot_duplicate_fillers(fillers):
                     continue
                 if not term_fits_family_whole(tokens, slot_specs, match_mode):
                     continue
@@ -1532,7 +1952,30 @@ def main() -> None:
         help="Enable all optional enrichments and policies (on) or disable them all (off).",
     )
     parser.add_argument("--progress-every", type=int, default=100000)
+    parser.add_argument(
+        "--family-config",
+        default=DEFAULT_FAMILY_CONFIG_PATH,
+        help="Path to editable family vocabulary config JSON.",
+    )
+    parser.add_argument(
+        "--validate-family-config",
+        action="store_true",
+        help="Validate family config and exit without running analysis.",
+    )
     args = parser.parse_args()
+
+    valid_config, config_errors, config_warnings = validate_family_config(args.family_config)
+    for warning in config_warnings:
+        print(f"[family-config warning] {warning}")
+    if not valid_config:
+        for error in config_errors:
+            print(f"[family-config error] {error}")
+        raise SystemExit(2)
+    if args.validate_family_config:
+        print(f"Family config validation passed: {args.family_config}")
+        raise SystemExit(0)
+
+    family_config_loaded = apply_family_config(args.family_config)
 
     optionals_on = args.optionals == "on"
     min_template_freq = 100
@@ -1788,6 +2231,7 @@ def main() -> None:
         f.write("Canonicalization: disabled\n")
         f.write("N-gram analysis: disabled\n")
         f.write(f"Optionals mode: {args.optionals}\n")
+        f.write(f"Family config: {args.family_config if family_config_loaded else 'not loaded'}\n")
         f.write(f"Template match mode: {template_match_mode}\n")
         f.write(f"Chapter policy mode: {chapter_policy_mode}\n")
         f.write(f"Include single-slot families: {'on' if include_single_slot else 'off'}\n")

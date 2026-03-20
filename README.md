@@ -68,12 +68,58 @@ Custom paths:
 python analyze_compositionality.py --input my_terms.csv --output-dir out
 ```
 
+Use a custom family/vocabulary config:
+
+```bash
+python analyze_compositionality.py --family-config family_vocabularies.json
+```
+
 ## CLI (Simplified)
 
 - `--input`: input CSV path
 - `--output-dir`: output directory
 - `--optionals on|off`: master switch for all optional features
 - `--progress-every`: progress print interval (rows)
+- `--family-config`: editable JSON file for slots and template families
+- `--validate-family-config`: validate config and exit
+
+## Curating Families Outside Code
+
+The pipeline now loads slot vocabularies and family definitions from:
+- `family_vocabularies.json`
+
+This file is intended for manual review and curation.
+
+Structure:
+- `slots`: vocabulary tokens per slot (for example `anatomy`, `injury`, `condition`)
+- `slot_prefixes`: prefix vocab for prefix-aware slots
+- `template_families`: family name to ordered slot list
+
+Example:
+
+```json
+{
+	"slots": {
+		"anatomy": ["tibia", "fibula", "vertebra"],
+		"injury": ["fracture", "laceration"]
+	},
+	"template_families": {
+		"anatomy_x_injury_x_encounter": ["anatomy", "injury", "encounter"]
+	}
+}
+```
+
+Workflow:
+1. Edit `family_vocabularies.json`.
+2. Validate config quickly:
+
+```bash
+python analyze_compositionality.py --validate-family-config
+```
+
+3. Run analyzer.
+3. Review `analysis_outputs/template_families.csv` and `analysis_outputs/term_family_assignments.csv`.
+4. Repeat until families are specific and useful.
 
 ## Optionals Mode
 
